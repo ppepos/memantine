@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if [ ! -d "env" ]; then
+    virtualenv2.7 env
+fi
+source ${PWD}/env/bin/activate
+pip2 install -r requirements.txt
+

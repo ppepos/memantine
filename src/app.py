@@ -1,14 +1,16 @@
 import datetime
 
-from flask import Flask
+from flask import Flask, redirect, render_template, session, url_for, flash
 from flask.ext.script import Manager
-from flask.ext.login import UserMixin, LoginManager
+from flask.ext.login import UserMixin, LoginManager, login_user, logout_user, \
+                            login_required, current_user
 from flask.ext.mongoengine import MongoEngine
 from flask.ext.wtf import Form
 from flask.ext.bootstrap import Bootstrap
 from werkzeug.security import generate_password_hash, check_password_hash
-from wtforms import StringField, SubmitField
-from wtforms.validators import Required
+from wtforms import StringField, SubmitField, PasswordField, BooleanField, \
+                    DateField
+from wtforms.validators import Required, Length, Optional
 
 app = Flask(__name__)
 manager = Manager(app)
@@ -25,6 +27,7 @@ app.config['MONGODB_SETTINGS'] = {
         }
 
 db = MongoEngine(app)
+bootstrap = Bootstrap(app)
 
 class User(UserMixin, db.Document):
     username = db.StringField(max_length=32, unique=True, required=True)
@@ -36,20 +39,19 @@ class User(UserMixin, db.Document):
 
     @password.setter
     def password(self, password):
-        print "NEW PASSWD HASH:", generate_password_hash(password)
         self.password_hash = generate_password_hash(password)
 
     def verify_password(self, password):
         return check_password_hash(self.password_hash, password)
 
     def get_id(self):
-        return User.objects.get(username=username)['_id']
-
+        return unicode(self.id)
 
 class Spending(db.Document):
     item = db.StringField(max_length=64, required=True)
     description = db.StringField(max_length=512, required=False)
     spender = db.StringField(max_length=32, required=True)
+    amount = db.DecimalField(required=True)
     date = db.DateTimeField(default=datetime.datetime.now, required=True)
     comment = db.StringField(max_length=512, required=False)
 
@@ -61,32 +63,60 @@ class LoginForm(Form):
     submit = SubmitField('Log In')
 
 
+class SpendingsForm(Form):
+    date = DateField('Date', format='%m/%d/%Y', validators=[Optional()])
+    item = StringField('Item', validators=[Required()])
+    description = StringField('Description')
+    amount = DecimalField('Amount', validators=[Required(), NumberRange(min=0)])
+    comment = StringField('Comment')
+    submit = SubmitField('Submit')
+
+
 # User Mixin required callback function
 @login_manager.user_loader
-def load_user(self):
-    return User.objects.get(id=user_id)
+def load_user(user_id):
+    return User.objects.get(id=unicode(user_id))
+
 
 @app.route('/')
 def index():
-    return '<h1>Welcome to Memantine!</h1><br /><h2>Under Construction!</h2>'
-
-@app.route('/index')
-def dev_index():
     return render_template('index.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.objects.get(username=form.username.data).first()
+        user = User.objects.get(username=form.username.data)
         if user is not None and user.verify_password(form.password.data):
             login_user(user, form.remember_me.data)
             return redirect(url_for('index'))
         flash('Invalid username or password')
-    return render_template('login.html')
-            
+    return render_template('login.html', form=form)
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('You have been logged out.')
+    return redirect(url_for('index'))
+
+@app.route('/spending', methods=['GET', 'POST'])
+@login_required
+def spend():
+    form = SpendingsForm()
+    if form.validate_on_submit():
+        spending = Spending()
+        spending.spender = current_user.username
+        spending.item = form.item.data
+        spending.description = form.description.data
+        spending.date = form.date.data
+        spending.comment = form.comment.data
+        spending.save()
+        flash('Successfully saved %s' % spending.item)
+
+    form = SpendingsForm()
+    return render_template('new_spending.html', form=form)
 
 if __name__ == "__main__":
-    # app.run(debug=True)
     manager.run()
 

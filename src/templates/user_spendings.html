@@ -1,0 +1,36 @@
+{% extends "base.html"%}
+
+{% block page_content %}
+<div class="panel panel-default">
+  <!-- Default panel contents -->
+  <div class="panel-heading">{{ user.username|capitalize }}'s Spendings</div>
+  <!-- Profile picture placeholder 
+  <div class="panel-body">
+    <p>...</p>
+  </div>
+  -->
+
+  <!-- Table -->
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Item</th>
+        <th>Description</th>
+        <th>Value</th>
+      </tr>
+    <thead>
+    <tbody>
+      {% for spending in spendings %}
+      <tr>
+        <td>{{ spending.date }}</td>
+        <td>{{ spending.item }}</td>
+        <td>{{ spending.description }}</td>
+        <td>{{ spending.amount }} $</td>
+      {% endfor %}
+      </tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+

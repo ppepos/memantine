@@ -9,8 +9,8 @@ from flask.ext.wtf import Form
 from flask.ext.bootstrap import Bootstrap
 from werkzeug.security import generate_password_hash, check_password_hash
 from wtforms import StringField, SubmitField, PasswordField, BooleanField, \
-                    DateField
-from wtforms.validators import Required, Length, Optional
+                    DateTimeField, DecimalField
+from wtforms.validators import Required, Length, Optional, NumberRange
 
 app = Flask(__name__)
 manager = Manager(app)
@@ -32,6 +32,7 @@ bootstrap = Bootstrap(app)
 class User(UserMixin, db.Document):
     username = db.StringField(max_length=32, unique=True, required=True)
     password_hash = db.StringField(max_length=128)
+    total_spent = db.DecimalField(required=True, min_value=0, precision=2)
 
     @property
     def password(self):
@@ -64,11 +65,11 @@ class LoginForm(Form):
 
 
 class SpendingsForm(Form):
-    date = DateField('Date', format='%m/%d/%Y', validators=[Optional()])
+    date = DateTimeField('Date', default=datetime.datetime.now(), format='%Y/%m/%d %H:%M:%S', validators=[Optional()])
     item = StringField('Item', validators=[Required()])
-    description = StringField('Description')
+    description = StringField('Description', filters = [lambda x: x or None])
     amount = DecimalField('Amount', validators=[Required(), NumberRange(min=0)])
-    comment = StringField('Comment')
+    comment = StringField('Comment', filters = [lambda x: x or None])
     submit = SubmitField('Submit')
 
 
@@ -79,14 +80,24 @@ def load_user(user_id):
 
 
 @app.route('/')
+@login_required
 def index():
-    return render_template('index.html')
+    recent_spendings = {}
+    users = User.objects.only("username", "total_spent")
+    for user in users:
+        # item, amount, date of last 3 spendings of user
+        recent_spendings[user.username] = Spending.objects(spender=user.username).only("item", "amount", "date").order_by("-date")[:3]
+
+    return render_template('index.html', users=users, recent=recent_spendings)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.objects.get(username=form.username.data)
+        try:
+            user = User.objects.get(username=form.username.data)
+        except User.DoesNotExist as e:
+            user = None
         if user is not None and user.verify_password(form.password.data):
             login_user(user, form.remember_me.data)
             return redirect(url_for('index'))
@@ -111,11 +122,26 @@ def spend():
         spending.description = form.description.data
         spending.date = form.date.data
         spending.comment = form.comment.data
+        spending.amount = form.amount.data
         spending.save()
+
+        user_id = current_user.get_id()
+        user = load_user(user_id)
+        user.total_spent = user.total_spent + spending.amount
+        user.save()
+
         flash('Successfully saved %s' % spending.item)
 
     form = SpendingsForm()
     return render_template('new_spending.html', form=form)
+
+@app.route('/user/<username>')
+@login_required
+def user_spendings(username):
+    user = User.objects.get_or_404(username=username)
+    spendings = Spending.objects(spender=user.username)
+    return render_template('user_spendings.html', user=user, spendings=spendings)
+
 
 if __name__ == "__main__":
     manager.run()

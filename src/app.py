@@ -33,6 +33,7 @@ class User(UserMixin, db.Document):
     username = db.StringField(max_length=32, unique=True, required=True)
     password_hash = db.StringField(max_length=128)
     total_spent = db.DecimalField(required=True, min_value=0, precision=2)
+    display_name = db.StringField(max_length=32, unique=True, required=True)
 
     @property
     def password(self):
@@ -48,6 +49,7 @@ class User(UserMixin, db.Document):
     def get_id(self):
         return unicode(self.id)
 
+
 class Spending(db.Document):
     item = db.StringField(max_length=64, required=True)
     description = db.StringField(max_length=512, required=False)
@@ -55,6 +57,12 @@ class Spending(db.Document):
     amount = db.DecimalField(required=True)
     date = db.DateTimeField(default=datetime.datetime.now, required=True)
     comment = db.StringField(max_length=512, required=False)
+
+
+class AccountSettingsForm(Form):
+    display_name = StringField(validators=[Length(0,32)])
+    password = PasswordField('Password')
+    submit = SubmitField('Save')
 
 
 class LoginForm(Form):
@@ -111,6 +119,34 @@ def logout():
     flash('You have been logged out.')
     return redirect(url_for('index'))
 
+@app.route('/account', methods=['GET', 'POST'])
+@login_required
+def account_settings():
+    form = AccountSettingsForm()
+    if form.validate_on_submit():
+
+        new_display = None
+        new_pass = None
+
+        if form.display_name.data != '':
+            new_display = form.display_name.data
+        if form.password.data != '':
+            new_pass = form.password.data
+
+        if new_display or new_pass:
+            user_id = current_user.get_id()
+            user = load_user(user_id)
+            if new_display:
+                user.display_name = new_display
+            if new_pass:
+                user.password = new_pass
+            user.save()
+
+            flash('Successfully updated your settingst')
+
+    form = AccountSettingsForm()
+    return render_template('account_settings.html', form=form)
+
 @app.route('/spending', methods=['GET', 'POST'])
 @login_required
 def spend():
@@ -124,7 +160,6 @@ def spend():
         spending.comment = form.comment.data
         spending.amount = form.amount.data
         spending.save()
-
         user_id = current_user.get_id()
         user = load_user(user_id)
         user.total_spent = user.total_spent + spending.amount
@@ -135,10 +170,16 @@ def spend():
     form = SpendingsForm()
     return render_template('new_spending.html', form=form)
 
-@app.route('/user/<username>')
+
+@app.route('/userspending/', defaults={'username': 'self'})
+@app.route('/userspending/<username>')
 @login_required
 def user_spendings(username):
-    user = User.objects.get_or_404(username=username)
+    if username == 'self':
+        user_id = current_user.get_id()
+        user = load_user(user_id)
+    else:
+        user = User.objects.get_or_404(username=username)
     spendings = Spending.objects(spender=user.username)
     return render_template('user_spendings.html', user=user, spendings=spendings)
 

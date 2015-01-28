@@ -3,7 +3,7 @@
 {% block page_content %}
 <div class="panel panel-default">
   <!-- Default panel contents -->
-  <div class="panel-heading">{{ user.username|capitalize }}'s Spendings</div>
+  <div class="panel-heading">{{ user.display_name }}'s Spendings</div>
   <!-- Profile picture placeholder 
   <div class="panel-body">
     <p>...</p>
@@ -26,7 +26,7 @@
         <td>{{ spending.date }}</td>
         <td>{{ spending.item }}</td>
         <td>{{ spending.description }}</td>
-        <td>{{ spending.amount }} $</td>
+        <td>{{ spending.amount }}$</td>
       {% endfor %}
       </tr>
     </tbody>

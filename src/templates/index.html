@@ -6,11 +6,12 @@
 </div>
 <div class="row">
 	<div class="col-lg-4">
-		<div class="panel panel-primary">
+		<div class="panel panel-info">
 		  <!-- Default panel contents -->
 		  <div class="panel-heading">
-				{{ current_user.username|capitalize }}
-				<span class="label pull-right">{{ current_user.total_spent }} $</span>
+			  <a href="{{ url_for('user_spendings', username=current_user.username) }}">{{
+				  current_user.display_name }}</a>
+				<span class="pull-right">{{ current_user.total_spent }} $</span>
 			</div>
 			<!--
 		  <div class="panel-body">
@@ -22,8 +23,8 @@
 		  <ul class="list-group">
 			{% for spending in recent[current_user.username] %}
 		    <li class="list-group-item">
-					{{ spending.item|capitalize }}
-					<span class="label label-primary pull-right">{{ spending.amount }} $</span>
+					{{ spending.item | capitalize }}
+					<span class="pull-right">{{ spending.amount }} $</span>
 				</li>
 			{% endfor %}
 		  </ul>
@@ -32,11 +33,11 @@
 	{% for user in users %}
 	{% if user.username != current_user.username %}
 	<div class="col-lg-4">
-		<div class="panel panel-info">
+		<div class="panel panel-default">
 		  <!-- Default panel contents -->
 		  <div class="panel-heading">
-				{{ user.username|capitalize }}
-				<span class="label label-info pull-right">{{ user.total_spent }} $</span>
+			  <a href="{{ url_for('user_spendings', username=user.username) }}">{{ user.display_name }}</a>
+				<span class="pull-right">{{ user.total_spent }} $</span>
 			</div>
 			<!--
 		  <div class="panel-body">
@@ -49,7 +50,7 @@
 			{% for spending in recent[user.username] %}
 		    <li class="list-group-item">
 					{{ spending.item|capitalize }}
-					<span class="label label-info pull-right">{{ spending.amount }} $</span>
+					<span class="pull-right">{{ spending.amount }} $</span>
 				</li>
 			{% endfor %}
 		  </ul>

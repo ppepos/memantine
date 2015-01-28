@@ -1,3 +1,4 @@
+import os
 import datetime
 
 from flask import Flask, redirect, render_template, session, url_for, flash
@@ -21,8 +22,9 @@ login_manager.session_protection = 'strong'
 login_manager.login_view = 'login'
 login_manager.init_app(app)
 
-app.config['SECRET_KEY'] = 'YOURSECRETKEYHERE'
+app.config['SECRET_KEY'] = os.environ.get('MEMANTINE_SECRET', 'defaultsecret')
 app.config['MONGODB_SETTINGS'] = {
+        'HOST': os.environ.get('MEMANTINE_MONGO_HOST', 'localhost'),
         'DB': 'memantine',
         }
 

@@ -24,8 +24,8 @@ login_manager.init_app(app)
 
 app.config['SECRET_KEY'] = os.environ.get('MEMANTINE_SECRET', 'defaultsecret')
 app.config['MONGODB_SETTINGS'] = {
-        'HOST': os.environ.get('MEMANTINE_MONGO_HOST', 'localhost'),
-        'DB': 'memantine',
+        'host': os.environ.get('MEMANTINE_MONGO_HOST', 'localhost'),
+        'db': 'memantine',
         }
 
 db = MongoEngine(app)
@@ -59,6 +59,13 @@ class Spending(db.Document):
     amount = db.DecimalField(required=True)
     date = db.DateTimeField(default=datetime.datetime.now, required=True)
     comment = db.StringField(max_length=512, required=False)
+
+
+class RegisterForm(Form):
+    username = StringField('Username', validators=[Required(), Length(1,32)])
+    password = PasswordField('Password', validators=[Required()])
+    display_name = StringField('Display Name', validators=[Required()])
+    submit = SubmitField('Register')
 
 
 class AccountSettingsForm(Form):
@@ -99,6 +106,20 @@ def index():
         recent_spendings[user.username] = Spending.objects(spender=user.username).only("item", "amount", "date").order_by("-date")[:3]
 
     return render_template('index.html', users=users, recent=recent_spendings)
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    form = RegisterForm()
+    if form.validate_on_submit():
+        user = User()
+        user.username = form.username.data
+        user.password = form.password.data
+        user.display_name = form.display_name.data
+        user.total_spent = 0.00
+        user.save()
+        return redirect(url_for('index'))
+    else:
+        return render_template('register.html', form=form)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():

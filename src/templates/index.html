@@ -7,10 +7,15 @@
 <div class="row">
 	<div class="col-lg-4">
 		<div class="panel panel-info">
-		  <!-- Default panel contents -->
-		  <div class="panel-heading">
-			  <a href="{{ url_for('user_spendings', username=current_user.username) }}">{{
-				  current_user.display_name }}</a>
+			<!-- Default panel contents -->
+			<div class="panel-heading">
+				<a href="{{ url_for('user_spendings', username=current_user.username) }}">
+					{% if current_user.display_name %}
+						{{current_user.display_name }}
+					{% else %}
+						{{current_user.username }}
+					{% endif %}
+				</a>
 				<span class="pull-right">{{ current_user.total_spent }} $</span>
 			</div>
 			<!--
@@ -34,9 +39,15 @@
 	{% if user.username != current_user.username %}
 	<div class="col-lg-4">
 		<div class="panel panel-default">
-		  <!-- Default panel contents -->
+			<!-- Default panel contents -->
 		  <div class="panel-heading">
-			  <a href="{{ url_for('user_spendings', username=user.username) }}">{{ user.display_name }}</a>
+				<a href="{{ url_for('user_spendings', username=user.username) }}">
+					{% if user.display_name %}
+						{{user.display_name }}
+					{% else %}
+						{{user.username }}
+					{% endif %}
+				</a>
 				<span class="pull-right">{{ user.total_spent }} $</span>
 			</div>
 			<!--

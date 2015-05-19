@@ -101,11 +101,17 @@ def load_user(user_id):
 def index():
     recent_spendings = {}
     users = User.objects.only("username", "total_spent")
+    total_spent_by_all_users = sum(user.total_spent for user in users)
+    current_user_id = current_user.get_id()
     for user in users:
+        if user.get_id() == current_user_id:
+            current_user_balance = user.total_spent - (total_spent_by_all_users / users.count())
         # item, amount, date of last 3 spendings of user
         recent_spendings[user.username] = Spending.objects(spender=user.username).only("item", "amount", "date").order_by("-date")[:3]
 
-    return render_template('index.html', users=users, recent=recent_spendings)
+    return render_template('index.html', users=users, recent=recent_spendings, current_user_balance=current_user_balance)
+
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():

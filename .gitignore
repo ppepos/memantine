@@ -55,3 +55,6 @@ target/
 
 # Database data
 data/
+
+# Vim buffer files
+*.swp

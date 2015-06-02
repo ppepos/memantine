@@ -77,4 +77,30 @@
 	{% endif %}
 	{% endfor %}
 </div>
+  <div class="row">
+    <h2>Quick Stats</h2>
+    <div class="col-lg-12">
+      <div class="panel panel-default">
+        <!-- Default panel contents -->
+        <div class="panel-heading">
+          Total Spent:
+          <span class="pull-right">{{ current_user.total_spent }} $</span>
+        </div>
+        <!-- List group -->
+        <ul class="list-group">
+          <li class="list-group-item">
+            Global balance:
+            <span class="pull-right">XXXXXX</span>
+          </li>
+          <li class="list-group-item">
+            <table class="table">
+              <tr>
+                <td></td>
+              </tr>
+            </table>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
 {% endblock %}

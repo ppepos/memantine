@@ -7,10 +7,10 @@ clean:
 	sudo docker rm memantine
 
 setup:
-	sudo docker pull dockerfile/mongodb
+	sudo docker pull mongo
 
 mongo:
-	sudo docker run -d -p 27017:27017 -v ${PWD}/data/db:/data/db --name mongodb-memantine dockerfile/mongodb
+	sudo docker run -d -p 27017:27017 -v ${PWD}/data/db:/data/db --name mongodb-memantine mongo
 
 prod-mongo:
 	sudo docker run -d -v ${PWD}/data/db:/data/db --name mongodb-memantine dockerfile/mongodb

@@ -27,7 +27,7 @@ login_manager.init_app(app)
 app.config['DEBUG'] = True
 app.config['SECRET_KEY'] = os.environ.get('MEMANTINE_SECRET', 'defaultsecret')
 app.config['SQLALCHEMY_DATABASE_URI'] = \
-        'sqlite:///' + os.path.join(basedir, 'data.sqlite')
+        'sqlite:///' + os.path.join(basedir, 'db', 'data.sqlite')
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
 
 bootstrap = Bootstrap(app)

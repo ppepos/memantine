@@ -16,7 +16,7 @@ from wtforms.validators import Required, Length, Optional, NumberRange
 
 app = Flask(__name__)
 
-basedir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+basedir = os.path.abspath(os.path.dirname(__file__))
 
 # LoginManager Parameters
 login_manager = LoginManager()

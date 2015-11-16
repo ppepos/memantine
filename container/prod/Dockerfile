@@ -11,5 +11,4 @@ COPY prod.key /etc/memantine/prod.key
 RUN pip install -r /opt/memantine/requirements.txt
 
 CMD 	export MEMANTINE_SECRET=$(cat /etc/memantine/prod.key) && \
-	export MEMANTINE_MONGO_HOST=mongodb && \
 	python /opt/memantine/src/app.py runserver -D -R --threaded -h 0.0.0.0
